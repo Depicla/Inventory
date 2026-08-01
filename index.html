@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Inventario</title>
     <link rel="manifest" href="manifest.json">
-    <!-- Icone di FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -28,7 +27,7 @@
             color: var(--text-color);
             margin: 0;
             padding: 0;
-            padding-bottom: 70px; /* Spazio per la navbar */
+            padding-bottom: 70px;
             transition: background 0.3s, color 0.3s;
         }
         header {
@@ -52,9 +51,7 @@
             font-size: 1.2rem;
             cursor: pointer;
         }
-        .container {
-            padding: 15px;
-        }
+        .container { padding: 15px; }
         .card {
             background-color: var(--card-bg);
             border: 1px solid var(--border);
@@ -76,14 +73,8 @@
             margin-left: 10px;
         }
         .card-actions .delete-btn { color: #ff4444; }
+        .item-details { font-size: 0.85rem; color: gray; margin-top: 5px; }
         
-        .item-details {
-            font-size: 0.85rem;
-            color: gray;
-            margin-top: 5px;
-        }
-        
-        /* Form & Inputs */
         input, select, textarea {
             width: 100%;
             padding: 10px;
@@ -105,7 +96,13 @@
             cursor: pointer;
         }
         
-        /* Navigation Bar */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        .filter-bar input, .filter-bar select { margin-bottom: 10px; }
+
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -127,18 +124,15 @@
         .nav-item i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
         .nav-item span { font-size: 0.75rem; }
 
-        /* Views */
         .view { display: none; }
         .view.active { display: block; }
         
-        /* Modal / Settings */
         .settings-row {
             display: flex;
             justify-content: space-between;
             padding: 15px 0;
             border-bottom: 1px solid var(--border);
         }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -149,27 +143,30 @@
         <button class="header-btn" onclick="showAddModal()"><i class="fas fa-plus"></i></button>
     </header>
 
-    <!-- VISTA PRINCIPALE (Macro Categorie) -->
     <div id="view-home" class="view active container">
         <div id="macroList"></div>
     </div>
 
-    <!-- VISTA SOTTOCATEGORIE -->
     <div id="view-subcat" class="view container">
         <div id="subcatList"></div>
     </div>
 
-    <!-- VISTA ELEMENTI -->
     <div id="view-items" class="view container">
+        <!-- BARRA DEI FILTRI -->
+        <div class="filter-bar">
+            <input type="text" id="searchItem" placeholder="🔍 Cerca nome o note..." onkeyup="renderItems()">
+            <select id="filterPosition" onchange="renderItems()">
+                <option value="">Tutte le posizioni</option>
+            </select>
+        </div>
         <div id="itemsList"></div>
     </div>
 
-    <!-- VISTA AGGIUNTA RAPIDA -->
     <div id="view-quickadd" class="view container">
         <h3>Aggiungi un nuovo elemento</h3>
         <input type="text" id="qaName" placeholder="Nome elemento (es. Forno pizza)">
         <input type="number" id="qaQty" placeholder="Quantità" value="1">
-        <input type="text" id="qaPos" placeholder="Posizione (es. Scaffale alto)">
+        <input type="text" id="qaPos" placeholder="Posizione (es. Scaffale alto, 3° piano...)">
         <textarea id="qaNotes" placeholder="Note (es. Marchio, stato...)"></textarea>
         
         <label>Seleziona Dove Inserirlo:</label>
@@ -179,7 +176,6 @@
         <button class="btn-primary" onclick="saveQuickAdd()">Aggiungi all'Inventario</button>
     </div>
 
-    <!-- VISTA IMPOSTAZIONI -->
     <div id="view-settings" class="view container">
         <div class="settings-row">
             <span>Tema Scuro</span>
@@ -198,7 +194,6 @@
         </div>
     </div>
 
-    <!-- NAVBAR INFERIORE -->
     <div class="bottom-nav">
         <div class="nav-item active" onclick="navigate('home')" id="nav-home">
             <i class="fas fa-boxes"></i>
@@ -215,37 +210,30 @@
     </div>
 
     <script>
-        // Registrazione Service Worker per PWA
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js');
         }
 
-        // DATABASE E STATO
         let db = JSON.parse(localStorage.getItem('inventoryDB')) || [];
         let currentMacroId = null;
         let currentSubId = null;
-        let viewStack = ['home']; // Per gestire il tasto indietro
+        let viewStack = ['home']; 
 
-        // INIZIALIZZAZIONE
         function init() {
-            // Applica Tema
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.setAttribute('data-theme', 'dark');
                 document.getElementById('themeToggle').checked = true;
             }
-            // Applica data backup
             document.getElementById('lastBackupDate').innerText = localStorage.getItem('lastBackup') || 'Mai';
-            
             renderHome();
         }
 
-        // SALVATAGGIO
         function saveDB() {
             localStorage.setItem('inventoryDB', JSON.stringify(db));
         }
 
-        // NAVIGAZIONE
-        function navigate(viewName, title = "Inventario", addStack = true) {
+        // Modificata per accettare parametri extra (come macroId e subId precompilati)
+        function navigate(viewName, title = "Inventario", addStack = true, params = {}) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById('view-' + viewName).classList.add('active');
             
@@ -260,7 +248,6 @@
                 viewStack.push(viewName);
             }
 
-            // Tasto Indietro
             document.getElementById('backBtn').style.visibility = viewStack.length > 1 ? 'visible' : 'hidden';
 
             if(viewName === 'home') {
@@ -268,21 +255,22 @@
                 document.getElementById('backBtn').style.visibility = 'hidden';
                 renderHome();
             } else if (viewName === 'quickadd') {
-                populateQuickAddSelects();
+                // Passa i parametri di precompilazione se ci sono
+                populateQuickAddSelects(params.macroId, params.subId);
             }
         }
 
         function goBack() {
             if (viewStack.length > 1) {
-                viewStack.pop(); // Rimuovi vista corrente
-                let prevView = viewStack.pop(); // Prendi la precedente
+                viewStack.pop(); 
+                let prevView = viewStack.pop(); 
                 if(prevView === 'subcat') openMacro(currentMacroId);
+                else if(prevView === 'items') openSubcat(currentSubId);
                 else if(prevView === 'home') navigate('home');
                 else navigate(prevView);
             }
         }
 
-        // RENDERING HOME (Macro Categorie)
         function renderHome() {
             const list = document.getElementById('macroList');
             list.innerHTML = '';
@@ -328,37 +316,72 @@
         function openSubcat(subIndex) {
             currentSubId = subIndex;
             const sub = db[currentMacroId].subcats[subIndex];
-            const list = document.getElementById('itemsList');
-            list.innerHTML = '';
             
+            // Estrai tutte le posizioni uniche dagli oggetti per creare il filtro
             if(!sub.items) sub.items = [];
+            const posFilter = document.getElementById('filterPosition');
+            const uniquePositions = [...new Set(sub.items.map(item => item.pos).filter(pos => pos.trim() !== ''))];
             
-            sub.items.forEach((item, itemIndex) => {
-                list.innerHTML += `
-                    <div class="card" style="flex-direction: column; align-items: flex-start;">
-                        <div style="display: flex; justify-content: space-between; width: 100%;">
-                            <strong>${item.name} (x${item.qty})</strong>
-                            <div class="card-actions">
-                                <button onclick="editItem(${itemIndex})"><i class="fas fa-edit"></i></button>
-                                <button class="delete-btn" onclick="deleteItem(${itemIndex})"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                        <div class="item-details">
-                            ${item.pos ? '📍 ' + item.pos + '<br>' : ''}
-                            ${item.notes ? '📝 ' + item.notes : ''}
-                        </div>
-                    </div>`;
+            posFilter.innerHTML = '<option value="">Tutte le posizioni</option>';
+            uniquePositions.forEach(pos => {
+                posFilter.innerHTML += `<option value="${pos}">${pos}</option>`;
             });
+            
+            // Resetta il campo di ricerca
+            document.getElementById('searchItem').value = '';
+
             navigate('items', sub.name);
+            renderItems(); // Chiamata per visualizzare gli oggetti
         }
 
-        // GESTIONE DATI (Aggiunta/Modifica)
+        function renderItems() {
+            const sub = db[currentMacroId].subcats[currentSubId];
+            const list = document.getElementById('itemsList');
+            
+            // Valori dei filtri
+            const searchTerm = document.getElementById('searchItem').value.toLowerCase();
+            const selectedPos = document.getElementById('filterPosition').value;
+
+            list.innerHTML = '';
+
+            // Filtro e Rendering
+            let itemCount = 0;
+            sub.items.forEach((item, itemIndex) => {
+                let matchSearch = item.name.toLowerCase().includes(searchTerm) || (item.notes && item.notes.toLowerCase().includes(searchTerm));
+                let matchPos = (selectedPos === "" || item.pos === selectedPos);
+
+                if (matchSearch && matchPos) {
+                    itemCount++;
+                    list.innerHTML += `
+                        <div class="card" style="flex-direction: column; align-items: flex-start;">
+                            <div style="display: flex; justify-content: space-between; width: 100%;">
+                                <strong>${item.name} (x${item.qty})</strong>
+                                <div class="card-actions">
+                                    <button onclick="editItem(${itemIndex})"><i class="fas fa-edit"></i></button>
+                                    <button class="delete-btn" onclick="deleteItem(${itemIndex})"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="item-details">
+                                ${item.pos ? '📍 ' + item.pos + '<br>' : ''}
+                                ${item.notes ? '📝 ' + item.notes : ''}
+                            </div>
+                        </div>`;
+                }
+            });
+
+            if (itemCount === 0) {
+                list.innerHTML = `<p style="text-align:center; color:gray;">Nessun elemento trovato per questi filtri.</p>`;
+            }
+        }
+
         function showAddModal() {
-            // Se sono in home aggiunge macro, se in subcat aggiunge sub, se in item aggiunge item
             let view = viewStack[viewStack.length-1];
             if(view === 'home') addMacro();
             if(view === 'subcat') addSubcat();
-            if(view === 'items') navigate('quickadd'); // Dirotta su inserimento rapido
+            if(view === 'items') {
+                // Dirotta su inserimento rapido PASSANDO I DATI ATTUALI per precompilare
+                navigate('quickadd', "Aggiungi", true, { macroId: currentMacroId, subId: currentSubId });
+            }
         }
 
         function addMacro() {
@@ -402,7 +425,7 @@
         function deleteItem(index) {
             if(confirm("Rimuovere questo elemento dall'inventario?")) {
                 db[currentMacroId].subcats[currentSubId].items.splice(index, 1);
-                saveDB(); openSubcat(currentSubId);
+                saveDB(); openSubcat(currentSubId); // Ricarica la vista e i filtri
             }
         }
 
@@ -422,21 +445,26 @@
             saveDB(); openSubcat(currentSubId);
         }
 
-        // INSERIMENTO RAPIDO (Quick Add)
-        function populateQuickAddSelects() {
+        function populateQuickAddSelects(prefillMacroId = null, prefillSubId = null) {
             const macroSelect = document.getElementById('qaMacro');
             macroSelect.innerHTML = '<option value="">Seleziona Zona...</option>';
-            db.forEach((m, i) => macroSelect.innerHTML += `<option value="${i}">${m.name}</option>`);
-            updateSubcatSelect();
+            db.forEach((m, i) => {
+                let selected = (prefillMacroId !== null && parseInt(prefillMacroId) === i) ? 'selected' : '';
+                macroSelect.innerHTML += `<option value="${i}" ${selected}>${m.name}</option>`;
+            });
+            updateSubcatSelect(prefillSubId);
         }
 
-        function updateSubcatSelect() {
+        function updateSubcatSelect(prefillSubId = null) {
             const macroSelect = document.getElementById('qaMacro');
             const subcatSelect = document.getElementById('qaSubcat');
             subcatSelect.innerHTML = '<option value="">Seleziona Sottocategoria...</option>';
             if(macroSelect.value !== "") {
                 db[macroSelect.value].subcats.forEach((s, i) => {
-                    subcatSelect.innerHTML += `<option value="${i}">${s.name}</option>`;
+                    // Controlla se il valore è un evento (se attivato da onchange) o un ID passato
+                    let checkId = (typeof prefillSubId === 'object') ? null : prefillSubId;
+                    let selected = (checkId !== null && parseInt(checkId) === i) ? 'selected' : '';
+                    subcatSelect.innerHTML += `<option value="${i}" ${selected}>${s.name}</option>`;
                 });
             }
         }
@@ -457,16 +485,15 @@
             db[mId].subcats[sId].items.push({ name, qty: qty || 1, pos, notes });
             saveDB();
             
-            // Pulisce il form
             document.getElementById('qaName').value = '';
             document.getElementById('qaPos').value = '';
             document.getElementById('qaNotes').value = '';
             
-            alert("Aggiunto all'inventario!");
-            navigate('home');
+            // Imposta lo stato per aprire direttamente la sottocategoria appena modificata
+            currentMacroId = mId;
+            openSubcat(sId);
         }
 
-        // IMPOSTAZIONI & BACKUP
         function toggleTheme() {
             let isDark = document.getElementById('themeToggle').checked;
             if(isDark) {
@@ -510,7 +537,6 @@
             reader.readAsText(file);
         }
 
-        // Start
         init();
     </script>
 </body>
