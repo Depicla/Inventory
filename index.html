@@ -13,6 +13,8 @@
             --card-bg: #fff;
             --primary: #007bff;
             --border: #ddd;
+            --overlay: rgba(0,0,0,0.5);
+            --whatsapp: #25D366;
         }
         [data-theme="dark"] {
             --bg-color: #121212;
@@ -20,6 +22,8 @@
             --card-bg: #1e1e1e;
             --primary: #bb86fc;
             --border: #333;
+            --overlay: rgba(0,0,0,0.8);
+            --whatsapp: #1da851;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -44,13 +48,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        .header-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
+        .header-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
         .container { padding: 15px; }
         .card {
             background-color: var(--card-bg);
@@ -65,74 +63,71 @@
             cursor: pointer;
         }
         .card-content { flex-grow: 1; }
-        .card-actions button {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.2rem;
-            margin-left: 10px;
-        }
-        .card-actions .delete-btn { color: #ff4444; }
-        .item-details { font-size: 0.85rem; color: gray; margin-top: 5px; }
+        .card-actions { display: flex; gap: 15px; }
+        .card-actions button { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; }
+        .btn-move { color: #ff9800; }
+        .btn-edit { color: var(--primary); }
+        .btn-delete { color: #ff4444; }
+        .item-details { font-size: 0.85rem; color: gray; margin-top: 5px; line-height: 1.4; }
         
         input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            background: var(--card-bg);
-            color: var(--text-color);
-            box-sizing: border-box;
+            width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border);
+            border-radius: 5px; background: var(--card-bg); color: var(--text-color); box-sizing: border-box; font-size: 16px;
         }
         button.btn-primary {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
+            width: 100%; padding: 12px; background-color: var(--primary); color: white;
+            border: none; border-radius: 5px; font-size: 1rem; cursor: pointer;
+        }
+        button.btn-whatsapp {
+            width: 100%; padding: 12px; background-color: var(--whatsapp); color: white;
+            border: none; border-radius: 5px; font-size: 1rem; cursor: pointer; margin-top: 10px;
+        }
+        button.btn-secondary {
+            width: 100%; padding: 12px; background-color: transparent; color: var(--text-color);
+            border: 1px solid var(--border); border-radius: 5px; font-size: 1rem; cursor: pointer; margin-top: 10px;
         }
         
-        .filter-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 5px;
+        /* Modali */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay); z-index: 100;
+            display: none; justify-content: center; align-items: center;
         }
-        .filter-bar input, .filter-bar select { margin-bottom: 10px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: var(--card-bg); padding: 20px; border-radius: 10px;
+            width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-content h3 { margin-top: 0; }
+
+        /* Griglia Emoji */
+        .emoji-picker {
+            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;
+            max-height: 160px; overflow-y: auto; padding: 10px; 
+            border: 1px solid var(--border); border-radius: 5px; background: var(--bg-color);
+        }
+        .emoji-picker span {
+            font-size: 1.8rem; cursor: pointer; padding: 5px; border-radius: 8px; transition: 0.2s;
+        }
+        .emoji-picker span.selected { background-color: var(--primary); transform: scale(1.1); }
+
+        .global-search-bar { position: relative; margin-bottom: 15px; }
+        .global-search-bar i { position: absolute; left: 10px; top: 12px; color: gray; }
+        .global-search-bar input { padding-left: 35px; margin-bottom: 0; }
 
         .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background-color: var(--card-bg);
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            padding-bottom: env(safe-area-inset-bottom, 10px);
+            position: fixed; bottom: 0; width: 100%; background-color: var(--card-bg);
+            border-top: 1px solid var(--border); display: flex; justify-content: space-around;
+            padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px); z-index: 50;
         }
-        .nav-item {
-            text-align: center;
-            color: gray;
-            cursor: pointer;
-            flex: 1;
-        }
+        .nav-item { text-align: center; color: gray; cursor: pointer; flex: 1; }
         .nav-item.active { color: var(--primary); }
         .nav-item i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
         .nav-item span { font-size: 0.75rem; }
 
         .view { display: none; }
         .view.active { display: block; }
-        
-        .settings-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px 0;
-            border-bottom: 1px solid var(--border);
-        }
+        .settings-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border); }
     </style>
 </head>
 <body>
@@ -144,6 +139,11 @@
     </header>
 
     <div id="view-home" class="view active container">
+        <div class="global-search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="globalSearchInput" placeholder="Cerca in tutto l'inventario..." onkeyup="performGlobalSearch()">
+        </div>
+        <div id="globalSearchResults" style="display: none;"></div>
         <div id="macroList"></div>
     </div>
 
@@ -152,13 +152,7 @@
     </div>
 
     <div id="view-items" class="view container">
-        <!-- BARRA DEI FILTRI -->
-        <div class="filter-bar">
-            <input type="text" id="searchItem" placeholder="🔍 Cerca nome o note..." onkeyup="renderItems()">
-            <select id="filterPosition" onchange="renderItems()">
-                <option value="">Tutte le posizioni</option>
-            </select>
-        </div>
+        <input type="text" id="searchItem" placeholder="🔍 Filtra per nome, posizione, note..." onkeyup="renderItems()">
         <div id="itemsList"></div>
     </div>
 
@@ -170,7 +164,7 @@
         <textarea id="qaNotes" placeholder="Note (es. Marchio, stato...)"></textarea>
         
         <label>Seleziona Dove Inserirlo:</label>
-        <select id="qaMacro" onchange="updateSubcatSelect()"></select>
+        <select id="qaMacro" onchange="updateSubcatSelect('qaMacro', 'qaSubcat')"></select>
         <select id="qaSubcat"></select>
         
         <button class="btn-primary" onclick="saveQuickAdd()">Aggiungi all'Inventario</button>
@@ -185,7 +179,7 @@
             <span>Ultimo Backup:</span>
             <span id="lastBackupDate">Mai</span>
         </div>
-        <button class="btn-primary" style="margin-top: 15px;" onclick="exportData()">Esporta Backup (Scarica)</button>
+        <button class="btn-primary" style="margin-top: 15px;" onclick="openModal('modalExport')">Esporta Backup</button>
         
         <div style="margin-top: 30px;">
             <h4>Ripristina Backup</h4>
@@ -194,30 +188,84 @@
         </div>
     </div>
 
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="navigate('home')" id="nav-home">
-            <i class="fas fa-boxes"></i>
-            <span>Sfoglia</span>
-        </div>
-        <div class="nav-item" onclick="navigate('quickadd')" id="nav-quickadd">
-            <i class="fas fa-bolt"></i>
-            <span>Inserisci</span>
-        </div>
-        <div class="nav-item" onclick="navigate('settings')" id="nav-settings">
-            <i class="fas fa-cog"></i>
-            <span>Opzioni</span>
+    <!-- MODALE ESPORTAZIONE -->
+    <div id="modalExport" class="modal-overlay">
+        <div class="modal-content" style="text-align: center;">
+            <h3>Esporta Dati</h3>
+            <p style="color: gray; margin-bottom: 20px;">Come preferisci esportare il tuo file di backup?</p>
+            <button class="btn-primary" onclick="downloadLocal()"><i class="fas fa-download"></i> Scarica sul telefono</button>
+            <button class="btn-whatsapp" onclick="shareBackup()"><i class="fab fa-whatsapp"></i> Condividi (WhatsApp / AirDrop)</button>
+            <button class="btn-secondary" onclick="closeModal('modalExport')">Annulla</button>
         </div>
     </div>
 
+    <!-- MODALE CREAZIONE/MODIFICA CATEGORIE E SOTTOCATEGORIE -->
+    <div id="modalCategory" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="catModalTitle">Nuova Zona</h3>
+            <label>Nome</label>
+            <input type="text" id="catName" placeholder="Inserisci il nome...">
+            
+            <label>Scegli un'icona (Attuale: <span id="currentCatIcon">📁</span>)</label>
+            <div class="emoji-picker" id="emojiPicker"></div>
+            <input type="hidden" id="catIcon" value="📁">
+            
+            <button class="btn-primary" onclick="saveCategory()">Salva</button>
+            <button class="btn-secondary" onclick="closeModal('modalCategory')">Annulla</button>
+        </div>
+    </div>
+
+    <!-- MODALE DI MODIFICA ELEMENTO -->
+    <div id="modalEdit" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Modifica Elemento</h3>
+            <label>Nome</label>
+            <input type="text" id="editName">
+            <label>Quantità</label>
+            <input type="number" id="editQty">
+            <label>Posizione</label>
+            <input type="text" id="editPos">
+            <label>Note</label>
+            <textarea id="editNotes"></textarea>
+            <button class="btn-primary" onclick="saveEdit()">Salva Modifiche</button>
+            <button class="btn-secondary" onclick="closeModal('modalEdit')">Annulla</button>
+        </div>
+    </div>
+
+    <!-- MODALE DI SPOSTAMENTO ELEMENTO -->
+    <div id="modalMove" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Sposta Elemento</h3>
+            <p id="moveItemName" style="margin-top:0; color: gray;"></p>
+            <label>Nuova Zona</label>
+            <select id="moveMacro" onchange="updateSubcatSelect('moveMacro', 'moveSubcat')"></select>
+            <label>Nuova Sottocategoria</label>
+            <select id="moveSubcat"></select>
+            <label>Nuova Posizione (Opzionale)</label>
+            <input type="text" id="movePos" placeholder="Es. Scaffale basso">
+            <button class="btn-primary" onclick="saveMove()">Sposta Elemento</button>
+            <button class="btn-secondary" onclick="closeModal('modalMove')">Annulla</button>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="navigate('home')" id="nav-home"><i class="fas fa-boxes"></i><span>Sfoglia</span></div>
+        <div class="nav-item" onclick="navigate('quickadd')" id="nav-quickadd"><i class="fas fa-bolt"></i><span>Inserisci</span></div>
+        <div class="nav-item" onclick="navigate('settings')" id="nav-settings"><i class="fas fa-cog"></i><span>Opzioni</span></div>
+    </div>
+
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js');
-        }
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 
         let db = JSON.parse(localStorage.getItem('inventoryDB')) || [];
         let currentMacroId = null;
         let currentSubId = null;
+        let editingItemIndex = null;
         let viewStack = ['home']; 
+        
+        let catModalMode = ''; 
+        let catTargetIndex = null;
+        const emojiList = ['🏠','🏖️','🏢','🚗','📦','🗄️','🧰','📚','👕','👟','🍽️','💻','🚲','🪴','🧸','🍷','🛁','🛏️','🛋️','🔧','🧹','🕹️','🧳','🎨','📁'];
 
         function init() {
             if(localStorage.getItem('theme') === 'dark') {
@@ -225,38 +273,31 @@
                 document.getElementById('themeToggle').checked = true;
             }
             document.getElementById('lastBackupDate').innerText = localStorage.getItem('lastBackup') || 'Mai';
+            populateEmojiPicker();
             renderHome();
         }
 
-        function saveDB() {
-            localStorage.setItem('inventoryDB', JSON.stringify(db));
-        }
+        function saveDB() { localStorage.setItem('inventoryDB', JSON.stringify(db)); }
 
-        // Modificata per accettare parametri extra (come macroId e subId precompilati)
         function navigate(viewName, title = "Inventario", addStack = true, params = {}) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById('view-' + viewName).classList.add('active');
             
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            if(document.getElementById('nav-' + viewName)) {
-                document.getElementById('nav-' + viewName).classList.add('active');
-            }
+            if(document.getElementById('nav-' + viewName)) document.getElementById('nav-' + viewName).classList.add('active');
 
             document.getElementById('headerTitle').innerText = title;
-            
-            if (addStack && viewStack[viewStack.length - 1] !== viewName) {
-                viewStack.push(viewName);
-            }
-
+            if (addStack && viewStack[viewStack.length - 1] !== viewName) viewStack.push(viewName);
             document.getElementById('backBtn').style.visibility = viewStack.length > 1 ? 'visible' : 'hidden';
 
             if(viewName === 'home') {
                 viewStack = ['home'];
                 document.getElementById('backBtn').style.visibility = 'hidden';
+                document.getElementById('globalSearchInput').value = '';
+                performGlobalSearch();
                 renderHome();
             } else if (viewName === 'quickadd') {
-                // Passa i parametri di precompilazione se ci sono
-                populateQuickAddSelects(params.macroId, params.subId);
+                populateMacroSelects('qaMacro', 'qaSubcat', params.macroId, params.subId);
             }
         }
 
@@ -277,16 +318,50 @@
             db.forEach((macro, index) => {
                 list.innerHTML += `
                     <div class="card" onclick="openMacro(${index})">
-                        <div class="card-content">
-                            <strong>${macro.icon} ${macro.name}</strong>
-                        </div>
+                        <div class="card-content"><strong>${macro.icon} ${macro.name}</strong></div>
                         <div class="card-actions" onclick="event.stopPropagation()">
-                            <button onclick="editMacro(${index})"><i class="fas fa-edit"></i></button>
-                            <button class="delete-btn" onclick="deleteMacro(${index})"><i class="fas fa-trash"></i></button>
+                            <button class="btn-edit" onclick="openCategoryModal('editMacro', ${index})"><i class="fas fa-edit"></i></button>
+                            <button class="btn-delete" onclick="deleteMacro(${index})"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>`;
             });
-            list.innerHTML += `<button class="btn-primary" onclick="addMacro()" style="margin-top:10px;">+ Nuova Zona (Macro Categoria)</button>`;
+            list.innerHTML += `<button class="btn-primary" onclick="openCategoryModal('addMacro')" style="margin-top:10px;">+ Nuova Zona</button>`;
+        }
+
+        function performGlobalSearch() {
+            const term = document.getElementById('globalSearchInput').value.toLowerCase();
+            const resultsContainer = document.getElementById('globalSearchResults');
+            const macroList = document.getElementById('macroList');
+            
+            if (!term) { resultsContainer.style.display = 'none'; macroList.style.display = 'block'; return; }
+            resultsContainer.style.display = 'block'; macroList.style.display = 'none'; resultsContainer.innerHTML = '';
+            
+            let found = 0;
+            db.forEach((macro, mIdx) => {
+                macro.subcats.forEach((sub, sIdx) => {
+                    sub.items.forEach((item) => {
+                        const searchString = `${item.name} ${item.pos} ${item.notes} ${item.qty}`.toLowerCase();
+                        if (searchString.includes(term)) {
+                            found++;
+                            resultsContainer.innerHTML += `
+                                <div class="card" style="flex-direction: column; align-items: flex-start;" onclick="jumpToSubcat(${mIdx}, ${sIdx})">
+                                    <strong style="font-size:1.1rem;">${item.name} (x${item.qty})</strong>
+                                    <div class="item-details">
+                                        <span style="color: var(--primary); font-weight:bold;">${macro.icon} ${macro.name} > ${sub.icon} ${sub.name}</span><br>
+                                        ${item.pos ? '📍 ' + item.pos + '<br>' : ''}
+                                        ${item.notes ? '📝 ' + item.notes : ''}
+                                    </div>
+                                </div>`;
+                        }
+                    });
+                });
+            });
+            if (found === 0) resultsContainer.innerHTML = '<p style="text-align:center; color:gray;">Nessun oggetto trovato.</p>';
+        }
+
+        function jumpToSubcat(mIdx, sIdx) {
+            document.getElementById('globalSearchInput').value = ''; performGlobalSearch();
+            currentMacroId = mIdx; navigate('subcat', db[mIdx].name); openSubcat(sIdx);
         }
 
         function openMacro(index) {
@@ -294,71 +369,49 @@
             const macro = db[index];
             const list = document.getElementById('subcatList');
             list.innerHTML = '';
-            
             if(!macro.subcats) macro.subcats = [];
             
             macro.subcats.forEach((sub, subIndex) => {
                 list.innerHTML += `
                     <div class="card" onclick="openSubcat(${subIndex})">
-                        <div class="card-content">
-                            <strong>${sub.icon} ${sub.name}</strong>
-                        </div>
+                        <div class="card-content"><strong>${sub.icon} ${sub.name}</strong></div>
                         <div class="card-actions" onclick="event.stopPropagation()">
-                            <button onclick="editSubcat(${subIndex})"><i class="fas fa-edit"></i></button>
-                            <button class="delete-btn" onclick="deleteSubcat(${subIndex})"><i class="fas fa-trash"></i></button>
+                            <button class="btn-edit" onclick="openCategoryModal('editSubcat', ${subIndex})"><i class="fas fa-edit"></i></button>
+                            <button class="btn-delete" onclick="deleteSubcat(${subIndex})"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>`;
             });
-            list.innerHTML += `<button class="btn-primary" onclick="addSubcat()" style="margin-top:10px;">+ Nuova Sottocategoria</button>`;
+            list.innerHTML += `<button class="btn-primary" onclick="openCategoryModal('addSubcat')" style="margin-top:10px;">+ Nuova Sottocategoria</button>`;
             navigate('subcat', macro.name);
         }
 
         function openSubcat(subIndex) {
             currentSubId = subIndex;
             const sub = db[currentMacroId].subcats[subIndex];
-            
-            // Estrai tutte le posizioni uniche dagli oggetti per creare il filtro
-            if(!sub.items) sub.items = [];
-            const posFilter = document.getElementById('filterPosition');
-            const uniquePositions = [...new Set(sub.items.map(item => item.pos).filter(pos => pos.trim() !== ''))];
-            
-            posFilter.innerHTML = '<option value="">Tutte le posizioni</option>';
-            uniquePositions.forEach(pos => {
-                posFilter.innerHTML += `<option value="${pos}">${pos}</option>`;
-            });
-            
-            // Resetta il campo di ricerca
             document.getElementById('searchItem').value = '';
-
             navigate('items', sub.name);
-            renderItems(); // Chiamata per visualizzare gli oggetti
+            renderItems();
         }
 
         function renderItems() {
             const sub = db[currentMacroId].subcats[currentSubId];
             const list = document.getElementById('itemsList');
-            
-            // Valori dei filtri
             const searchTerm = document.getElementById('searchItem').value.toLowerCase();
-            const selectedPos = document.getElementById('filterPosition').value;
-
             list.innerHTML = '';
-
-            // Filtro e Rendering
             let itemCount = 0;
-            sub.items.forEach((item, itemIndex) => {
-                let matchSearch = item.name.toLowerCase().includes(searchTerm) || (item.notes && item.notes.toLowerCase().includes(searchTerm));
-                let matchPos = (selectedPos === "" || item.pos === selectedPos);
 
-                if (matchSearch && matchPos) {
+            sub.items.forEach((item, itemIndex) => {
+                const searchString = `${item.name} ${item.pos} ${item.notes} ${item.qty}`.toLowerCase();
+                if (searchString.includes(searchTerm)) {
                     itemCount++;
                     list.innerHTML += `
                         <div class="card" style="flex-direction: column; align-items: flex-start;">
-                            <div style="display: flex; justify-content: space-between; width: 100%;">
-                                <strong>${item.name} (x${item.qty})</strong>
+                            <div style="display: flex; justify-content: space-between; width: 100%; align-items:center;">
+                                <strong style="font-size:1.1rem;">${item.name} (x${item.qty})</strong>
                                 <div class="card-actions">
-                                    <button onclick="editItem(${itemIndex})"><i class="fas fa-edit"></i></button>
-                                    <button class="delete-btn" onclick="deleteItem(${itemIndex})"><i class="fas fa-trash"></i></button>
+                                    <button class="btn-move" onclick="openMoveModal(${itemIndex})" title="Sposta"><i class="fas fa-exchange-alt"></i></button>
+                                    <button class="btn-edit" onclick="openEditModal(${itemIndex})" title="Modifica"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-delete" onclick="deleteItem(${itemIndex})" title="Elimina"><i class="fas fa-trash"></i></button>
                                 </div>
                             </div>
                             <div class="item-details">
@@ -368,100 +421,142 @@
                         </div>`;
                 }
             });
+            if (itemCount === 0) list.innerHTML = `<p style="text-align:center; color:gray;">Nessun elemento trovato.</p>`;
+        }
 
-            if (itemCount === 0) {
-                list.innerHTML = `<p style="text-align:center; color:gray;">Nessun elemento trovato per questi filtri.</p>`;
-            }
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function populateEmojiPicker() {
+            const picker = document.getElementById('emojiPicker');
+            picker.innerHTML = '';
+            emojiList.forEach(emoji => {
+                picker.innerHTML += `<span onclick="selectEmoji('${emoji}', this)">${emoji}</span>`;
+            });
+        }
+
+        function selectEmoji(emoji, element) {
+            document.getElementById('catIcon').value = emoji;
+            document.getElementById('currentCatIcon').innerText = emoji;
+            document.querySelectorAll('#emojiPicker span').forEach(el => el.classList.remove('selected'));
+            if(element) element.classList.add('selected');
         }
 
         function showAddModal() {
             let view = viewStack[viewStack.length-1];
-            if(view === 'home') addMacro();
-            if(view === 'subcat') addSubcat();
-            if(view === 'items') {
-                // Dirotta su inserimento rapido PASSANDO I DATI ATTUALI per precompilare
-                navigate('quickadd', "Aggiungi", true, { macroId: currentMacroId, subId: currentSubId });
+            if(view === 'home') openCategoryModal('addMacro');
+            if(view === 'subcat') openCategoryModal('addSubcat');
+            if(view === 'items') navigate('quickadd', "Aggiungi", true, { macroId: currentMacroId, subId: currentSubId });
+        }
+
+        function openCategoryModal(mode, index = null) {
+            catModalMode = mode;
+            catTargetIndex = index;
+            const titleEl = document.getElementById('catModalTitle');
+            const nameEl = document.getElementById('catName');
+            
+            document.querySelectorAll('#emojiPicker span').forEach(el => el.classList.remove('selected'));
+
+            if (mode === 'addMacro') {
+                titleEl.innerText = "Nuova Zona"; nameEl.value = ""; selectEmoji("🏠");
+            } else if (mode === 'addSubcat') {
+                titleEl.innerText = "Nuova Sottocategoria"; nameEl.value = ""; selectEmoji("📦");
+            } else if (mode === 'editMacro') {
+                titleEl.innerText = "Modifica Zona";
+                nameEl.value = db[index].name; selectEmoji(db[index].icon);
+            } else if (mode === 'editSubcat') {
+                titleEl.innerText = "Modifica Sottocategoria";
+                nameEl.value = db[currentMacroId].subcats[index].name; selectEmoji(db[currentMacroId].subcats[index].icon);
             }
+            openModal('modalCategory');
         }
 
-        function addMacro() {
-            let name = prompt("Nome della Zona (es. CASA MARE):");
-            if (!name) return;
-            let icon = prompt("Inserisci un'icona (emoji):", "🏠");
-            db.push({ name, icon: icon || "📁", subcats: [] });
-            saveDB(); renderHome();
-        }
+        function saveCategory() {
+            const name = document.getElementById('catName').value.trim();
+            const icon = document.getElementById('catIcon').value;
+            if (!name) { alert("Inserisci un nome!"); return; }
 
-        function editMacro(index) {
-            let name = prompt("Nuovo nome:", db[index].name);
-            if(name) { db[index].name = name; saveDB(); renderHome(); }
+            if (catModalMode === 'addMacro') {
+                db.push({ name, icon, subcats: [] }); renderHome();
+            } else if (catModalMode === 'addSubcat') {
+                db[currentMacroId].subcats.push({ name, icon, items: [] }); openMacro(currentMacroId);
+            } else if (catModalMode === 'editMacro') {
+                db[catTargetIndex].name = name; db[catTargetIndex].icon = icon; renderHome();
+            } else if (catModalMode === 'editSubcat') {
+                db[currentMacroId].subcats[catTargetIndex].name = name; db[currentMacroId].subcats[catTargetIndex].icon = icon; openMacro(currentMacroId);
+            }
+            saveDB(); closeModal('modalCategory');
         }
 
         function deleteMacro(index) {
-            if(confirm("Vuoi eliminare questa zona e tutto il suo contenuto?")) {
-                db.splice(index, 1); saveDB(); renderHome();
-            }
+            if(confirm("Vuoi eliminare questa zona e tutto il suo contenuto?")) { db.splice(index, 1); saveDB(); renderHome(); }
         }
-
-        function addSubcat() {
-            let name = prompt("Nome Sottocategoria (es. SGABUZZINO):");
-            if (!name) return;
-            let icon = prompt("Inserisci un'icona (emoji):", "📦");
-            db[currentMacroId].subcats.push({ name, icon: icon || "📁", items: [] });
-            saveDB(); openMacro(currentMacroId);
-        }
-
-        function editSubcat(index) {
-            let name = prompt("Nuovo nome:", db[currentMacroId].subcats[index].name);
-            if(name) { db[currentMacroId].subcats[index].name = name; saveDB(); openMacro(currentMacroId); }
-        }
-
         function deleteSubcat(index) {
-            if(confirm("Vuoi eliminare questa sottocategoria?")) {
-                db[currentMacroId].subcats.splice(index, 1); saveDB(); openMacro(currentMacroId);
-            }
+            if(confirm("Vuoi eliminare questa sottocategoria?")) { db[currentMacroId].subcats.splice(index, 1); saveDB(); openMacro(currentMacroId); }
+        }
+
+        function openEditModal(index) {
+            editingItemIndex = index;
+            let item = db[currentMacroId].subcats[currentSubId].items[index];
+            document.getElementById('editName').value = item.name;
+            document.getElementById('editQty').value = item.qty;
+            document.getElementById('editPos').value = item.pos || '';
+            document.getElementById('editNotes').value = item.notes || '';
+            openModal('modalEdit');
+        }
+
+        function saveEdit() {
+            let item = db[currentMacroId].subcats[currentSubId].items[editingItemIndex];
+            item.name = document.getElementById('editName').value;
+            item.qty = document.getElementById('editQty').value;
+            item.pos = document.getElementById('editPos').value;
+            item.notes = document.getElementById('editNotes').value;
+            saveDB(); closeModal('modalEdit'); renderItems();
+        }
+
+        function openMoveModal(index) {
+            editingItemIndex = index;
+            let item = db[currentMacroId].subcats[currentSubId].items[index];
+            document.getElementById('moveItemName').innerText = `Stai spostando: ${item.name}`;
+            document.getElementById('movePos').value = item.pos || '';
+            populateMacroSelects('moveMacro', 'moveSubcat', currentMacroId, currentSubId);
+            openModal('modalMove');
+        }
+
+        function saveMove() {
+            let newMacroId = document.getElementById('moveMacro').value;
+            let newSubId = document.getElementById('moveSubcat').value;
+            let newPos = document.getElementById('movePos').value;
+            if(newMacroId === "" || newSubId === "") { alert("Seleziona Zona e Sottocategoria valide."); return; }
+            let itemToMove = db[currentMacroId].subcats[currentSubId].items.splice(editingItemIndex, 1)[0];
+            itemToMove.pos = newPos;
+            db[newMacroId].subcats[newSubId].items.push(itemToMove);
+            saveDB(); closeModal('modalMove');
+            currentMacroId = newMacroId; openSubcat(newSubId);
         }
 
         function deleteItem(index) {
             if(confirm("Rimuovere questo elemento dall'inventario?")) {
-                db[currentMacroId].subcats[currentSubId].items.splice(index, 1);
-                saveDB(); openSubcat(currentSubId); // Ricarica la vista e i filtri
+                db[currentMacroId].subcats[currentSubId].items.splice(index, 1); saveDB(); renderItems();
             }
         }
 
-        function editItem(index) {
-            let item = db[currentMacroId].subcats[currentSubId].items[index];
-            let newName = prompt("Nome:", item.name); if(newName === null) return;
-            let newQty = prompt("Quantità:", item.qty);
-            let newPos = prompt("Posizione:", item.pos);
-            let newNotes = prompt("Note:", item.notes);
-            
-            db[currentMacroId].subcats[currentSubId].items[index] = {
-                name: newName || item.name,
-                qty: newQty || item.qty,
-                pos: newPos,
-                notes: newNotes
-            };
-            saveDB(); openSubcat(currentSubId);
-        }
-
-        function populateQuickAddSelects(prefillMacroId = null, prefillSubId = null) {
-            const macroSelect = document.getElementById('qaMacro');
+        function populateMacroSelects(macroSelectId, subcatSelectId, prefillMacroId = null, prefillSubId = null) {
+            const macroSelect = document.getElementById(macroSelectId);
             macroSelect.innerHTML = '<option value="">Seleziona Zona...</option>';
             db.forEach((m, i) => {
                 let selected = (prefillMacroId !== null && parseInt(prefillMacroId) === i) ? 'selected' : '';
                 macroSelect.innerHTML += `<option value="${i}" ${selected}>${m.name}</option>`;
             });
-            updateSubcatSelect(prefillSubId);
+            updateSubcatSelect(macroSelectId, subcatSelectId, prefillSubId);
         }
 
-        function updateSubcatSelect(prefillSubId = null) {
-            const macroSelect = document.getElementById('qaMacro');
-            const subcatSelect = document.getElementById('qaSubcat');
+        function updateSubcatSelect(macroSelectId, subcatSelectId, prefillSubId = null) {
+            const macroSelect = document.getElementById(macroSelectId);
+            const subcatSelect = document.getElementById(subcatSelectId);
             subcatSelect.innerHTML = '<option value="">Seleziona Sottocategoria...</option>';
             if(macroSelect.value !== "") {
                 db[macroSelect.value].subcats.forEach((s, i) => {
-                    // Controlla se il valore è un evento (se attivato da onchange) o un ID passato
                     let checkId = (typeof prefillSubId === 'object') ? null : prefillSubId;
                     let selected = (checkId !== null && parseInt(checkId) === i) ? 'selected' : '';
                     subcatSelect.innerHTML += `<option value="${i}" ${selected}>${s.name}</option>`;
@@ -477,62 +572,76 @@
             let mId = document.getElementById('qaMacro').value;
             let sId = document.getElementById('qaSubcat').value;
 
-            if(!name || mId === "" || sId === "") {
-                alert("Compila il nome e seleziona Zona e Sottocategoria.");
-                return;
-            }
+            if(!name || mId === "" || sId === "") { alert("Compila il nome e seleziona Zona e Sottocategoria."); return; }
 
-            db[mId].subcats[sId].items.push({ name, qty: qty || 1, pos, notes });
-            saveDB();
+            db[mId].subcats[sId].items.push({ name, qty: qty || 1, pos, notes }); saveDB();
             
             document.getElementById('qaName').value = '';
+            document.getElementById('qaQty').value = '1';
             document.getElementById('qaPos').value = '';
             document.getElementById('qaNotes').value = '';
             
-            // Imposta lo stato per aprire direttamente la sottocategoria appena modificata
-            currentMacroId = mId;
-            openSubcat(sId);
+            currentMacroId = mId; openSubcat(sId);
         }
 
         function toggleTheme() {
             let isDark = document.getElementById('themeToggle').checked;
-            if(isDark) {
-                document.body.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.body.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'light');
-            }
+            if(isDark) { document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); } 
+            else { document.body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); }
         }
 
-        function exportData() {
+        function updateBackupDate() {
+            let d = new Date().toLocaleString('it-IT');
+            localStorage.setItem('lastBackup', d); 
+            document.getElementById('lastBackupDate').innerText = d;
+        }
+
+        // Funzione per il vecchio download locale
+        function downloadLocal() {
             let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
             let downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
             downloadAnchorNode.setAttribute("download", "backup_inventario.json");
             document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+            downloadAnchorNode.click(); downloadAnchorNode.remove();
             
-            let d = new Date().toLocaleString('it-IT');
-            localStorage.setItem('lastBackup', d);
-            document.getElementById('lastBackupDate').innerText = d;
+            updateBackupDate();
+            closeModal('modalExport');
+        }
+
+        // Funzione nuova per la condivisione nativa (WhatsApp, AirDrop, ecc.)
+        async function shareBackup() {
+            const fileName = 'backup_inventario.json';
+            const fileContent = JSON.stringify(db);
+            const file = new File([fileContent], fileName, { type: 'application/json' });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Backup Inventario',
+                        text: 'Ecco il file di backup del nostro inventario.'
+                    });
+                    updateBackupDate();
+                    closeModal('modalExport');
+                } catch (err) {
+                    console.log('Condivisione annullata o fallita', err);
+                }
+            } else {
+                alert("Il tuo browser non supporta la condivisione diretta dei file. Verrà scaricato sul telefono.");
+                downloadLocal();
+            }
         }
 
         function importData() {
             const file = document.getElementById('importFile').files[0];
             if(!file) { alert("Seleziona un file di backup!"); return; }
-            
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    db = JSON.parse(e.target.result);
-                    saveDB();
-                    alert("Backup caricato con successo!");
-                    navigate('home');
-                } catch(err) {
-                    alert("Errore nel file di backup.");
-                }
+                    db = JSON.parse(e.target.result); saveDB();
+                    alert("Backup caricato con successo!"); navigate('home');
+                } catch(err) { alert("Errore nel file di backup."); }
             };
             reader.readAsText(file);
         }
