@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Inventario</title>
+    <link rel="manifest" href="manifest.json">
+    <!-- Icone di FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --text-color: #333;
+            --card-bg: #fff;
+            --primary: #007bff;
+            --border: #ddd;
+        }
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --primary: #bb86fc;
+            --border: #333;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 70px; /* Spazio per la navbar */
+            transition: background 0.3s, color 0.3s;
+        }
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        .container {
+            padding: 15px;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+        .card-content { flex-grow: 1; }
+        .card-actions button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            margin-left: 10px;
+        }
+        .card-actions .delete-btn { color: #ff4444; }
+        
+        .item-details {
+            font-size: 0.85rem;
+            color: gray;
+            margin-top: 5px;
+        }
+        
+        /* Form & Inputs */
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+        button.btn-primary {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        /* Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            padding-bottom: env(safe-area-inset-bottom, 10px);
+        }
+        .nav-item {
+            text-align: center;
+            color: gray;
+            cursor: pointer;
+            flex: 1;
+        }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
+        .nav-item span { font-size: 0.75rem; }
+
+        /* Views */
+        .view { display: none; }
+        .view.active { display: block; }
+        
+        /* Modal / Settings */
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="header-btn" id="backBtn" style="visibility: hidden;" onclick="goBack()"><i class="fas fa-chevron-left"></i></button>
+        <span id="headerTitle">Inventario</span>
+        <button class="header-btn" onclick="showAddModal()"><i class="fas fa-plus"></i></button>
+    </header>
+
+    <!-- VISTA PRINCIPALE (Macro Categorie) -->
+    <div id="view-home" class="view active container">
+        <div id="macroList"></div>
+    </div>
+
+    <!-- VISTA SOTTOCATEGORIE -->
+    <div id="view-subcat" class="view container">
+        <div id="subcatList"></div>
+    </div>
+
+    <!-- VISTA ELEMENTI -->
+    <div id="view-items" class="view container">
+        <div id="itemsList"></div>
+    </div>
+
+    <!-- VISTA AGGIUNTA RAPIDA -->
+    <div id="view-quickadd" class="view container">
+        <h3>Aggiungi un nuovo elemento</h3>
+        <input type="text" id="qaName" placeholder="Nome elemento (es. Forno pizza)">
+        <input type="number" id="qaQty" placeholder="Quantità" value="1">
+        <input type="text" id="qaPos" placeholder="Posizione (es. Scaffale alto)">
+        <textarea id="qaNotes" placeholder="Note (es. Marchio, stato...)"></textarea>
+        
+        <label>Seleziona Dove Inserirlo:</label>
+        <select id="qaMacro" onchange="updateSubcatSelect()"></select>
+        <select id="qaSubcat"></select>
+        
+        <button class="btn-primary" onclick="saveQuickAdd()">Aggiungi all'Inventario</button>
+    </div>
+
+    <!-- VISTA IMPOSTAZIONI -->
+    <div id="view-settings" class="view container">
+        <div class="settings-row">
+            <span>Tema Scuro</span>
+            <input type="checkbox" id="themeToggle" onchange="toggleTheme()" style="width: auto;">
+        </div>
+        <div class="settings-row">
+            <span>Ultimo Backup:</span>
+            <span id="lastBackupDate">Mai</span>
+        </div>
+        <button class="btn-primary" style="margin-top: 15px;" onclick="exportData()">Esporta Backup (Scarica)</button>
+        
+        <div style="margin-top: 30px;">
+            <h4>Ripristina Backup</h4>
+            <input type="file" id="importFile" accept=".json">
+            <button class="btn-primary" onclick="importData()">Carica Backup</button>
+        </div>
+    </div>
+
+    <!-- NAVBAR INFERIORE -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="navigate('home')" id="nav-home">
+            <i class="fas fa-boxes"></i>
+            <span>Sfoglia</span>
+        </div>
+        <div class="nav-item" onclick="navigate('quickadd')" id="nav-quickadd">
+            <i class="fas fa-bolt"></i>
+            <span>Inserisci</span>
+        </div>
+        <div class="nav-item" onclick="navigate('settings')" id="nav-settings">
+            <i class="fas fa-cog"></i>
+            <span>Opzioni</span>
+        </div>
+    </div>
+
+    <script>
+        // Registrazione Service Worker per PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js');
+        }
+
+        // DATABASE E STATO
+        let db = JSON.parse(localStorage.getItem('inventoryDB')) || [];
+        let currentMacroId = null;
+        let currentSubId = null;
+        let viewStack = ['home']; // Per gestire il tasto indietro
+
+        // INIZIALIZZAZIONE
+        function init() {
+            // Applica Tema
+            if(localStorage.getItem('theme') === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                document.getElementById('themeToggle').checked = true;
+            }
+            // Applica data backup
+            document.getElementById('lastBackupDate').innerText = localStorage.getItem('lastBackup') || 'Mai';
+            
+            renderHome();
+        }
+
+        // SALVATAGGIO
+        function saveDB() {
+            localStorage.setItem('inventoryDB', JSON.stringify(db));
+        }
+
+        // NAVIGAZIONE
+        function navigate(viewName, title = "Inventario", addStack = true) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + viewName).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if(document.getElementById('nav-' + viewName)) {
+                document.getElementById('nav-' + viewName).classList.add('active');
+            }
+
+            document.getElementById('headerTitle').innerText = title;
+            
+            if (addStack && viewStack[viewStack.length - 1] !== viewName) {
+                viewStack.push(viewName);
+            }
+
+            // Tasto Indietro
+            document.getElementById('backBtn').style.visibility = viewStack.length > 1 ? 'visible' : 'hidden';
+
+            if(viewName === 'home') {
+                viewStack = ['home'];
+                document.getElementById('backBtn').style.visibility = 'hidden';
+                renderHome();
+            } else if (viewName === 'quickadd') {
+                populateQuickAddSelects();
+            }
+        }
+
+        function goBack() {
+            if (viewStack.length > 1) {
+                viewStack.pop(); // Rimuovi vista corrente
+                let prevView = viewStack.pop(); // Prendi la precedente
+                if(prevView === 'subcat') openMacro(currentMacroId);
+                else if(prevView === 'home') navigate('home');
+                else navigate(prevView);
+            }
+        }
+
+        // RENDERING HOME (Macro Categorie)
+        function renderHome() {
+            const list = document.getElementById('macroList');
+            list.innerHTML = '';
+            db.forEach((macro, index) => {
+                list.innerHTML += `
+                    <div class="card" onclick="openMacro(${index})">
+                        <div class="card-content">
+                            <strong>${macro.icon} ${macro.name}</strong>
+                        </div>
+                        <div class="card-actions" onclick="event.stopPropagation()">
+                            <button onclick="editMacro(${index})"><i class="fas fa-edit"></i></button>
+                            <button class="delete-btn" onclick="deleteMacro(${index})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`;
+            });
+            list.innerHTML += `<button class="btn-primary" onclick="addMacro()" style="margin-top:10px;">+ Nuova Zona (Macro Categoria)</button>`;
+        }
+
+        function openMacro(index) {
+            currentMacroId = index;
+            const macro = db[index];
+            const list = document.getElementById('subcatList');
+            list.innerHTML = '';
+            
+            if(!macro.subcats) macro.subcats = [];
+            
+            macro.subcats.forEach((sub, subIndex) => {
+                list.innerHTML += `
+                    <div class="card" onclick="openSubcat(${subIndex})">
+                        <div class="card-content">
+                            <strong>${sub.icon} ${sub.name}</strong>
+                        </div>
+                        <div class="card-actions" onclick="event.stopPropagation()">
+                            <button onclick="editSubcat(${subIndex})"><i class="fas fa-edit"></i></button>
+                            <button class="delete-btn" onclick="deleteSubcat(${subIndex})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`;
+            });
+            list.innerHTML += `<button class="btn-primary" onclick="addSubcat()" style="margin-top:10px;">+ Nuova Sottocategoria</button>`;
+            navigate('subcat', macro.name);
+        }
+
+        function openSubcat(subIndex) {
+            currentSubId = subIndex;
+            const sub = db[currentMacroId].subcats[subIndex];
+            const list = document.getElementById('itemsList');
+            list.innerHTML = '';
+            
+            if(!sub.items) sub.items = [];
+            
+            sub.items.forEach((item, itemIndex) => {
+                list.innerHTML += `
+                    <div class="card" style="flex-direction: column; align-items: flex-start;">
+                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                            <strong>${item.name} (x${item.qty})</strong>
+                            <div class="card-actions">
+                                <button onclick="editItem(${itemIndex})"><i class="fas fa-edit"></i></button>
+                                <button class="delete-btn" onclick="deleteItem(${itemIndex})"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div class="item-details">
+                            ${item.pos ? '📍 ' + item.pos + '<br>' : ''}
+                            ${item.notes ? '📝 ' + item.notes : ''}
+                        </div>
+                    </div>`;
+            });
+            navigate('items', sub.name);
+        }
+
+        // GESTIONE DATI (Aggiunta/Modifica)
+        function showAddModal() {
+            // Se sono in home aggiunge macro, se in subcat aggiunge sub, se in item aggiunge item
+            let view = viewStack[viewStack.length-1];
+            if(view === 'home') addMacro();
+            if(view === 'subcat') addSubcat();
+            if(view === 'items') navigate('quickadd'); // Dirotta su inserimento rapido
+        }
+
+        function addMacro() {
+            let name = prompt("Nome della Zona (es. CASA MARE):");
+            if (!name) return;
+            let icon = prompt("Inserisci un'icona (emoji):", "🏠");
+            db.push({ name, icon: icon || "📁", subcats: [] });
+            saveDB(); renderHome();
+        }
+
+        function editMacro(index) {
+            let name = prompt("Nuovo nome:", db[index].name);
+            if(name) { db[index].name = name; saveDB(); renderHome(); }
+        }
+
+        function deleteMacro(index) {
+            if(confirm("Vuoi eliminare questa zona e tutto il suo contenuto?")) {
+                db.splice(index, 1); saveDB(); renderHome();
+            }
+        }
+
+        function addSubcat() {
+            let name = prompt("Nome Sottocategoria (es. SGABUZZINO):");
+            if (!name) return;
+            let icon = prompt("Inserisci un'icona (emoji):", "📦");
+            db[currentMacroId].subcats.push({ name, icon: icon || "📁", items: [] });
+            saveDB(); openMacro(currentMacroId);
+        }
+
+        function editSubcat(index) {
+            let name = prompt("Nuovo nome:", db[currentMacroId].subcats[index].name);
+            if(name) { db[currentMacroId].subcats[index].name = name; saveDB(); openMacro(currentMacroId); }
+        }
+
+        function deleteSubcat(index) {
+            if(confirm("Vuoi eliminare questa sottocategoria?")) {
+                db[currentMacroId].subcats.splice(index, 1); saveDB(); openMacro(currentMacroId);
+            }
+        }
+
+        function deleteItem(index) {
+            if(confirm("Rimuovere questo elemento dall'inventario?")) {
+                db[currentMacroId].subcats[currentSubId].items.splice(index, 1);
+                saveDB(); openSubcat(currentSubId);
+            }
+        }
+
+        function editItem(index) {
+            let item = db[currentMacroId].subcats[currentSubId].items[index];
+            let newName = prompt("Nome:", item.name); if(newName === null) return;
+            let newQty = prompt("Quantità:", item.qty);
+            let newPos = prompt("Posizione:", item.pos);
+            let newNotes = prompt("Note:", item.notes);
+            
+            db[currentMacroId].subcats[currentSubId].items[index] = {
+                name: newName || item.name,
+                qty: newQty || item.qty,
+                pos: newPos,
+                notes: newNotes
+            };
+            saveDB(); openSubcat(currentSubId);
+        }
+
+        // INSERIMENTO RAPIDO (Quick Add)
+        function populateQuickAddSelects() {
+            const macroSelect = document.getElementById('qaMacro');
+            macroSelect.innerHTML = '<option value="">Seleziona Zona...</option>';
+            db.forEach((m, i) => macroSelect.innerHTML += `<option value="${i}">${m.name}</option>`);
+            updateSubcatSelect();
+        }
+
+        function updateSubcatSelect() {
+            const macroSelect = document.getElementById('qaMacro');
+            const subcatSelect = document.getElementById('qaSubcat');
+            subcatSelect.innerHTML = '<option value="">Seleziona Sottocategoria...</option>';
+            if(macroSelect.value !== "") {
+                db[macroSelect.value].subcats.forEach((s, i) => {
+                    subcatSelect.innerHTML += `<option value="${i}">${s.name}</option>`;
+                });
+            }
+        }
+
+        function saveQuickAdd() {
+            let name = document.getElementById('qaName').value;
+            let qty = document.getElementById('qaQty').value;
+            let pos = document.getElementById('qaPos').value;
+            let notes = document.getElementById('qaNotes').value;
+            let mId = document.getElementById('qaMacro').value;
+            let sId = document.getElementById('qaSubcat').value;
+
+            if(!name || mId === "" || sId === "") {
+                alert("Compila il nome e seleziona Zona e Sottocategoria.");
+                return;
+            }
+
+            db[mId].subcats[sId].items.push({ name, qty: qty || 1, pos, notes });
+            saveDB();
+            
+            // Pulisce il form
+            document.getElementById('qaName').value = '';
+            document.getElementById('qaPos').value = '';
+            document.getElementById('qaNotes').value = '';
+            
+            alert("Aggiunto all'inventario!");
+            navigate('home');
+        }
+
+        // IMPOSTAZIONI & BACKUP
+        function toggleTheme() {
+            let isDark = document.getElementById('themeToggle').checked;
+            if(isDark) {
+                document.body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        function exportData() {
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+            let downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "backup_inventario.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            
+            let d = new Date().toLocaleString('it-IT');
+            localStorage.setItem('lastBackup', d);
+            document.getElementById('lastBackupDate').innerText = d;
+        }
+
+        function importData() {
+            const file = document.getElementById('importFile').files[0];
+            if(!file) { alert("Seleziona un file di backup!"); return; }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    db = JSON.parse(e.target.result);
+                    saveDB();
+                    alert("Backup caricato con successo!");
+                    navigate('home');
+                } catch(err) {
+                    alert("Errore nel file di backup.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
