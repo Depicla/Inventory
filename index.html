@@ -68,12 +68,14 @@
         .btn-move { color: #ff9800; }
         .btn-edit { color: var(--primary); }
         .btn-delete { color: #ff4444; }
-        .item-details { font-size: 0.85rem; color: gray; margin-top: 5px; line-height: 1.4; }
+        .item-details { font-size: 0.85rem; color: gray; margin-top: 5px; line-height: 1.4; flex-grow: 1;}
         
         input, select, textarea {
             width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border);
             border-radius: 5px; background: var(--card-bg); color: var(--text-color); box-sizing: border-box; font-size: 16px;
         }
+        input[type="file"] { background: transparent; border: none; padding: 0; margin-bottom: 10px; }
+        
         button.btn-primary {
             width: 100%; padding: 12px; background-color: var(--primary); color: white;
             border: none; border-radius: 5px; font-size: 1rem; cursor: pointer;
@@ -87,6 +89,17 @@
             border: 1px solid var(--border); border-radius: 5px; font-size: 1rem; cursor: pointer; margin-top: 10px;
         }
         
+        /* Foto Thumbnails */
+        .item-thumbnail {
+            width: 60px; height: 60px; border-radius: 8px; object-fit: cover; margin-right: 15px;
+            border: 1px solid var(--border); flex-shrink: 0; cursor: zoom-in;
+        }
+        .photo-preview-container { text-align: center; margin-bottom: 15px; }
+        .photo-preview-container img {
+            max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border);
+            display: none; margin: 0 auto;
+        }
+
         /* Modali */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -100,15 +113,20 @@
         }
         .modal-content h3 { margin-top: 0; }
 
-        /* Griglia Emoji */
+        /* Fullscreen Image Viewer */
+        #modalImageView .modal-content {
+            background: transparent; padding: 0; box-shadow: none; max-width: 100%; text-align: center;
+        }
+        #modalImageView img {
+            max-width: 100%; max-height: 80vh; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
         .emoji-picker {
             display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;
             max-height: 160px; overflow-y: auto; padding: 10px; 
             border: 1px solid var(--border); border-radius: 5px; background: var(--bg-color);
         }
-        .emoji-picker span {
-            font-size: 1.8rem; cursor: pointer; padding: 5px; border-radius: 8px; transition: 0.2s;
-        }
+        .emoji-picker span { font-size: 1.8rem; cursor: pointer; padding: 5px; border-radius: 8px; transition: 0.2s; }
         .emoji-picker span.selected { background-color: var(--primary); transform: scale(1.1); }
 
         .global-search-bar { position: relative; margin-bottom: 15px; }
@@ -156,11 +174,20 @@
         <div id="itemsList"></div>
     </div>
 
+    <!-- INSERIMENTO RAPIDO (con Foto) -->
     <div id="view-quickadd" class="view container">
         <h3>Aggiungi un nuovo elemento</h3>
+        
+        <label>Foto (Opzionale)</label>
+        <input type="file" id="qaPhotoInput" accept="image/*" onchange="handleImageUpload(event, 'qaPhotoPreview', 'qaRemoveBtn', 'qa')">
+        <div class="photo-preview-container">
+            <img id="qaPhotoPreview">
+            <button class="btn-secondary" id="qaRemoveBtn" style="display:none; padding: 5px; font-size: 0.9rem;" onclick="removeImage('qaPhotoInput', 'qaPhotoPreview', 'qaRemoveBtn', 'qa')">Rimuovi Foto</button>
+        </div>
+
         <input type="text" id="qaName" placeholder="Nome elemento (es. Forno pizza)">
         <input type="number" id="qaQty" placeholder="Quantità" value="1">
-        <input type="text" id="qaPos" placeholder="Posizione (es. Scaffale alto, 3° piano...)">
+        <input type="text" id="qaPos" placeholder="Posizione (es. Scaffale alto...)">
         <textarea id="qaNotes" placeholder="Note (es. Marchio, stato...)"></textarea>
         
         <label>Seleziona Dove Inserirlo:</label>
@@ -188,7 +215,7 @@
         </div>
     </div>
 
-    <!-- MODALE ESPORTAZIONE -->
+    <!-- MODALI VARI -->
     <div id="modalExport" class="modal-overlay">
         <div class="modal-content" style="text-align: center;">
             <h3>Esporta Dati</h3>
@@ -199,26 +226,31 @@
         </div>
     </div>
 
-    <!-- MODALE CREAZIONE/MODIFICA CATEGORIE E SOTTOCATEGORIE -->
     <div id="modalCategory" class="modal-overlay">
         <div class="modal-content">
             <h3 id="catModalTitle">Nuova Zona</h3>
             <label>Nome</label>
             <input type="text" id="catName" placeholder="Inserisci il nome...">
-            
             <label>Scegli un'icona (Attuale: <span id="currentCatIcon">📁</span>)</label>
             <div class="emoji-picker" id="emojiPicker"></div>
             <input type="hidden" id="catIcon" value="📁">
-            
             <button class="btn-primary" onclick="saveCategory()">Salva</button>
             <button class="btn-secondary" onclick="closeModal('modalCategory')">Annulla</button>
         </div>
     </div>
 
-    <!-- MODALE DI MODIFICA ELEMENTO -->
+    <!-- MODALE DI MODIFICA ELEMENTO (con Foto) -->
     <div id="modalEdit" class="modal-overlay">
         <div class="modal-content">
             <h3>Modifica Elemento</h3>
+            
+            <label>Foto</label>
+            <input type="file" id="editPhotoInput" accept="image/*" onchange="handleImageUpload(event, 'editPhotoPreview', 'editRemoveBtn', 'edit')">
+            <div class="photo-preview-container">
+                <img id="editPhotoPreview">
+                <button class="btn-secondary" id="editRemoveBtn" style="display:none; padding: 5px; font-size: 0.9rem;" onclick="removeImage('editPhotoInput', 'editPhotoPreview', 'editRemoveBtn', 'edit')">Rimuovi Foto</button>
+            </div>
+
             <label>Nome</label>
             <input type="text" id="editName">
             <label>Quantità</label>
@@ -232,7 +264,6 @@
         </div>
     </div>
 
-    <!-- MODALE DI SPOSTAMENTO ELEMENTO -->
     <div id="modalMove" class="modal-overlay">
         <div class="modal-content">
             <h3>Sposta Elemento</h3>
@@ -245,6 +276,14 @@
             <input type="text" id="movePos" placeholder="Es. Scaffale basso">
             <button class="btn-primary" onclick="saveMove()">Sposta Elemento</button>
             <button class="btn-secondary" onclick="closeModal('modalMove')">Annulla</button>
+        </div>
+    </div>
+
+    <!-- MODALE PER VEDERE LA FOTO INGRANDITA -->
+    <div id="modalImageView" class="modal-overlay" onclick="closeModal('modalImageView')">
+        <div class="modal-content">
+            <img id="fullSizeImage" src="">
+            <p style="color: white; margin-top: 10px;">Tocca ovunque per chiudere</p>
         </div>
     </div>
 
@@ -266,6 +305,10 @@
         let catModalMode = ''; 
         let catTargetIndex = null;
         const emojiList = ['🏠','🏖️','🏢','🚗','📦','🗄️','🧰','📚','👕','👟','🍽️','💻','🚲','🪴','🧸','🍷','🛁','🛏️','🛋️','🔧','🧹','🕹️','🧳','🎨','📁'];
+
+        // Variabili per tenere in memoria le foto (compresse in Base64) prima di salvare
+        let qaPhotoBase64 = null;
+        let editPhotoBase64 = null;
 
         function init() {
             if(localStorage.getItem('theme') === 'dark') {
@@ -312,6 +355,68 @@
             }
         }
 
+        // --- SISTEMA DI COMPRESSIONE FOTO ---
+        function compressImage(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    // Limite massimo dimensioni (es. 800px)
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    } else {
+                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                    }
+
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Compressione a JPEG qualità 60% (riduce drasticamente il peso in KB)
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                    callback(dataUrl);
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function handleImageUpload(event, previewId, removeBtnId, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            compressImage(file, function(base64) {
+                document.getElementById(previewId).src = base64;
+                document.getElementById(previewId).style.display = 'block';
+                document.getElementById(removeBtnId).style.display = 'inline-block';
+                
+                if(type === 'qa') qaPhotoBase64 = base64;
+                else editPhotoBase64 = base64;
+            });
+        }
+
+        function removeImage(inputId, previewId, removeBtnId, type) {
+            document.getElementById(inputId).value = '';
+            document.getElementById(previewId).src = '';
+            document.getElementById(previewId).style.display = 'none';
+            document.getElementById(removeBtnId).style.display = 'none';
+            
+            if(type === 'qa') qaPhotoBase64 = null;
+            else editPhotoBase64 = null;
+        }
+
+        function viewFullImage(src) {
+            document.getElementById('fullSizeImage').src = src;
+            openModal('modalImageView');
+        }
+        // ------------------------------------
+
         function renderHome() {
             const list = document.getElementById('macroList');
             list.innerHTML = '';
@@ -344,12 +449,12 @@
                         if (searchString.includes(term)) {
                             found++;
                             resultsContainer.innerHTML += `
-                                <div class="card" style="flex-direction: column; align-items: flex-start;" onclick="jumpToSubcat(${mIdx}, ${sIdx})">
-                                    <strong style="font-size:1.1rem;">${item.name} (x${item.qty})</strong>
-                                    <div class="item-details">
+                                <div class="card" style="align-items: flex-start;" onclick="jumpToSubcat(${mIdx}, ${sIdx})">
+                                    ${item.image ? `<img src="${item.image}" class="item-thumbnail">` : ''}
+                                    <div class="item-details" style="margin-top:0;">
+                                        <strong style="font-size:1.1rem; color: var(--text-color);">${item.name} (x${item.qty})</strong><br>
                                         <span style="color: var(--primary); font-weight:bold;">${macro.icon} ${macro.name} > ${sub.icon} ${sub.name}</span><br>
                                         ${item.pos ? '📍 ' + item.pos + '<br>' : ''}
-                                        ${item.notes ? '📝 ' + item.notes : ''}
                                     </div>
                                 </div>`;
                         }
@@ -405,18 +510,22 @@
                 if (searchString.includes(searchTerm)) {
                     itemCount++;
                     list.innerHTML += `
-                        <div class="card" style="flex-direction: column; align-items: flex-start;">
-                            <div style="display: flex; justify-content: space-between; width: 100%; align-items:center;">
-                                <strong style="font-size:1.1rem;">${item.name} (x${item.qty})</strong>
-                                <div class="card-actions">
-                                    <button class="btn-move" onclick="openMoveModal(${itemIndex})" title="Sposta"><i class="fas fa-exchange-alt"></i></button>
-                                    <button class="btn-edit" onclick="openEditModal(${itemIndex})" title="Modifica"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-delete" onclick="deleteItem(${itemIndex})" title="Elimina"><i class="fas fa-trash"></i></button>
+                        <div class="card" style="align-items: flex-start;">
+                            ${item.image ? `<img src="${item.image}" class="item-thumbnail" onclick="viewFullImage('${item.image}')">` : ''}
+                            
+                            <div style="flex-grow: 1; display:flex; flex-direction:column;">
+                                <div style="display: flex; justify-content: space-between; width: 100%; align-items:flex-start;">
+                                    <strong style="font-size:1.1rem; line-height:1.2;">${item.name} (x${item.qty})</strong>
+                                    <div class="card-actions" style="gap:5px;">
+                                        <button class="btn-move" onclick="openMoveModal(${itemIndex})" title="Sposta"><i class="fas fa-exchange-alt"></i></button>
+                                        <button class="btn-edit" onclick="openEditModal(${itemIndex})" title="Modifica"><i class="fas fa-edit"></i></button>
+                                        <button class="btn-delete" onclick="deleteItem(${itemIndex})" title="Elimina"><i class="fas fa-trash"></i></button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="item-details">
-                                ${item.pos ? '📍 ' + item.pos + '<br>' : ''}
-                                ${item.notes ? '📝 ' + item.notes : ''}
+                                <div class="item-details">
+                                    ${item.pos ? '📍 ' + item.pos + '<br>' : ''}
+                                    ${item.notes ? '📝 ' + item.notes : ''}
+                                </div>
                             </div>
                         </div>`;
                 }
@@ -430,11 +539,8 @@
         function populateEmojiPicker() {
             const picker = document.getElementById('emojiPicker');
             picker.innerHTML = '';
-            emojiList.forEach(emoji => {
-                picker.innerHTML += `<span onclick="selectEmoji('${emoji}', this)">${emoji}</span>`;
-            });
+            emojiList.forEach(emoji => { picker.innerHTML += `<span onclick="selectEmoji('${emoji}', this)">${emoji}</span>`; });
         }
-
         function selectEmoji(emoji, element) {
             document.getElementById('catIcon').value = emoji;
             document.getElementById('currentCatIcon').innerText = emoji;
@@ -450,24 +556,15 @@
         }
 
         function openCategoryModal(mode, index = null) {
-            catModalMode = mode;
-            catTargetIndex = index;
+            catModalMode = mode; catTargetIndex = index;
             const titleEl = document.getElementById('catModalTitle');
             const nameEl = document.getElementById('catName');
-            
             document.querySelectorAll('#emojiPicker span').forEach(el => el.classList.remove('selected'));
 
-            if (mode === 'addMacro') {
-                titleEl.innerText = "Nuova Zona"; nameEl.value = ""; selectEmoji("🏠");
-            } else if (mode === 'addSubcat') {
-                titleEl.innerText = "Nuova Sottocategoria"; nameEl.value = ""; selectEmoji("📦");
-            } else if (mode === 'editMacro') {
-                titleEl.innerText = "Modifica Zona";
-                nameEl.value = db[index].name; selectEmoji(db[index].icon);
-            } else if (mode === 'editSubcat') {
-                titleEl.innerText = "Modifica Sottocategoria";
-                nameEl.value = db[currentMacroId].subcats[index].name; selectEmoji(db[currentMacroId].subcats[index].icon);
-            }
+            if (mode === 'addMacro') { titleEl.innerText = "Nuova Zona"; nameEl.value = ""; selectEmoji("🏠"); }
+            else if (mode === 'addSubcat') { titleEl.innerText = "Nuova Sottocategoria"; nameEl.value = ""; selectEmoji("📦"); }
+            else if (mode === 'editMacro') { titleEl.innerText = "Modifica Zona"; nameEl.value = db[index].name; selectEmoji(db[index].icon); }
+            else if (mode === 'editSubcat') { titleEl.innerText = "Modifica Sottocategoria"; nameEl.value = db[currentMacroId].subcats[index].name; selectEmoji(db[currentMacroId].subcats[index].icon); }
             openModal('modalCategory');
         }
 
@@ -476,24 +573,15 @@
             const icon = document.getElementById('catIcon').value;
             if (!name) { alert("Inserisci un nome!"); return; }
 
-            if (catModalMode === 'addMacro') {
-                db.push({ name, icon, subcats: [] }); renderHome();
-            } else if (catModalMode === 'addSubcat') {
-                db[currentMacroId].subcats.push({ name, icon, items: [] }); openMacro(currentMacroId);
-            } else if (catModalMode === 'editMacro') {
-                db[catTargetIndex].name = name; db[catTargetIndex].icon = icon; renderHome();
-            } else if (catModalMode === 'editSubcat') {
-                db[currentMacroId].subcats[catTargetIndex].name = name; db[currentMacroId].subcats[catTargetIndex].icon = icon; openMacro(currentMacroId);
-            }
+            if (catModalMode === 'addMacro') { db.push({ name, icon, subcats: [] }); renderHome(); }
+            else if (catModalMode === 'addSubcat') { db[currentMacroId].subcats.push({ name, icon, items: [] }); openMacro(currentMacroId); }
+            else if (catModalMode === 'editMacro') { db[catTargetIndex].name = name; db[catTargetIndex].icon = icon; renderHome(); }
+            else if (catModalMode === 'editSubcat') { db[currentMacroId].subcats[catTargetIndex].name = name; db[currentMacroId].subcats[catTargetIndex].icon = icon; openMacro(currentMacroId); }
             saveDB(); closeModal('modalCategory');
         }
 
-        function deleteMacro(index) {
-            if(confirm("Vuoi eliminare questa zona e tutto il suo contenuto?")) { db.splice(index, 1); saveDB(); renderHome(); }
-        }
-        function deleteSubcat(index) {
-            if(confirm("Vuoi eliminare questa sottocategoria?")) { db[currentMacroId].subcats.splice(index, 1); saveDB(); openMacro(currentMacroId); }
-        }
+        function deleteMacro(index) { if(confirm("Eliminare questa zona e tutto il contenuto?")) { db.splice(index, 1); saveDB(); renderHome(); } }
+        function deleteSubcat(index) { if(confirm("Eliminare questa sottocategoria?")) { db[currentMacroId].subcats.splice(index, 1); saveDB(); openMacro(currentMacroId); } }
 
         function openEditModal(index) {
             editingItemIndex = index;
@@ -502,6 +590,17 @@
             document.getElementById('editQty').value = item.qty;
             document.getElementById('editPos').value = item.pos || '';
             document.getElementById('editNotes').value = item.notes || '';
+            
+            // Gestione foto esistente
+            editPhotoBase64 = item.image || null;
+            if (item.image) {
+                document.getElementById('editPhotoPreview').src = item.image;
+                document.getElementById('editPhotoPreview').style.display = 'block';
+                document.getElementById('editRemoveBtn').style.display = 'inline-block';
+            } else {
+                removeImage('editPhotoInput', 'editPhotoPreview', 'editRemoveBtn', 'edit');
+            }
+
             openModal('modalEdit');
         }
 
@@ -511,6 +610,8 @@
             item.qty = document.getElementById('editQty').value;
             item.pos = document.getElementById('editPos').value;
             item.notes = document.getElementById('editNotes').value;
+            item.image = editPhotoBase64; // Salva la foto (o null se rimossa)
+
             saveDB(); closeModal('modalEdit'); renderItems();
         }
 
@@ -535,11 +636,7 @@
             currentMacroId = newMacroId; openSubcat(newSubId);
         }
 
-        function deleteItem(index) {
-            if(confirm("Rimuovere questo elemento dall'inventario?")) {
-                db[currentMacroId].subcats[currentSubId].items.splice(index, 1); saveDB(); renderItems();
-            }
-        }
+        function deleteItem(index) { if(confirm("Rimuovere questo elemento?")) { db[currentMacroId].subcats[currentSubId].items.splice(index, 1); saveDB(); renderItems(); } }
 
         function populateMacroSelects(macroSelectId, subcatSelectId, prefillMacroId = null, prefillSubId = null) {
             const macroSelect = document.getElementById(macroSelectId);
@@ -574,12 +671,13 @@
 
             if(!name || mId === "" || sId === "") { alert("Compila il nome e seleziona Zona e Sottocategoria."); return; }
 
-            db[mId].subcats[sId].items.push({ name, qty: qty || 1, pos, notes }); saveDB();
+            // Aggiungiamo anche qaPhotoBase64 all'oggetto
+            db[mId].subcats[sId].items.push({ name, qty: qty || 1, pos, notes, image: qaPhotoBase64 }); 
+            saveDB();
             
-            document.getElementById('qaName').value = '';
-            document.getElementById('qaQty').value = '1';
-            document.getElementById('qaPos').value = '';
-            document.getElementById('qaNotes').value = '';
+            document.getElementById('qaName').value = ''; document.getElementById('qaQty').value = '1';
+            document.getElementById('qaPos').value = ''; document.getElementById('qaNotes').value = '';
+            removeImage('qaPhotoInput', 'qaPhotoPreview', 'qaRemoveBtn', 'qa');
             
             currentMacroId = mId; openSubcat(sId);
         }
@@ -596,7 +694,6 @@
             document.getElementById('lastBackupDate').innerText = d;
         }
 
-        // Funzione per il vecchio download locale
         function downloadLocal() {
             let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
             let downloadAnchorNode = document.createElement('a');
@@ -604,12 +701,9 @@
             downloadAnchorNode.setAttribute("download", "backup_inventario.json");
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click(); downloadAnchorNode.remove();
-            
-            updateBackupDate();
-            closeModal('modalExport');
+            updateBackupDate(); closeModal('modalExport');
         }
 
-        // Funzione nuova per la condivisione nativa (WhatsApp, AirDrop, ecc.)
         async function shareBackup() {
             const fileName = 'backup_inventario.json';
             const fileContent = JSON.stringify(db);
@@ -617,31 +711,21 @@
 
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 try {
-                    await navigator.share({
-                        files: [file],
-                        title: 'Backup Inventario',
-                        text: 'Ecco il file di backup del nostro inventario.'
-                    });
-                    updateBackupDate();
-                    closeModal('modalExport');
-                } catch (err) {
-                    console.log('Condivisione annullata o fallita', err);
-                }
+                    await navigator.share({ files: [file], title: 'Backup Inventario', text: 'Ecco il file di backup del nostro inventario.' });
+                    updateBackupDate(); closeModal('modalExport');
+                } catch (err) { console.log('Condivisione annullata', err); }
             } else {
-                alert("Il tuo browser non supporta la condivisione diretta dei file. Verrà scaricato sul telefono.");
-                downloadLocal();
+                alert("Il tuo browser non supporta la condivisione diretta. Verrà scaricato sul telefono."); downloadLocal();
             }
         }
 
         function importData() {
             const file = document.getElementById('importFile').files[0];
-            if(!file) { alert("Seleziona un file di backup!"); return; }
+            if(!file) { alert("Seleziona un file!"); return; }
             const reader = new FileReader();
             reader.onload = function(e) {
-                try {
-                    db = JSON.parse(e.target.result); saveDB();
-                    alert("Backup caricato con successo!"); navigate('home');
-                } catch(err) { alert("Errore nel file di backup."); }
+                try { db = JSON.parse(e.target.result); saveDB(); alert("Backup caricato con successo!"); navigate('home'); } 
+                catch(err) { alert("Errore nel file di backup."); }
             };
             reader.readAsText(file);
         }
